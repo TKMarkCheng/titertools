@@ -1,5 +1,5 @@
 
-rcensnorm <- function(mean, sd, lower_lims, upper_lims,random_seed=random_seed) {
+rcensnorm <- function(mean, sd, lower_lims, upper_lims) {
 
   mean <- rep_len(mean, length(lower_lims))
   sd   <- rep_len(sd, length(lower_lims))
@@ -9,7 +9,6 @@ rcensnorm <- function(mean, sd, lower_lims, upper_lims,random_seed=random_seed) 
   min_p <- pnorm(lower_lims[bounded_titer], mean[bounded_titer], sd[bounded_titer])
   max_p <- pnorm(upper_lims[bounded_titer], mean[bounded_titer], sd[bounded_titer])
   
-  set.seed(random_seed) #runif is a random process - setting a random seed here ensures reproducibility  
   samples <- runif(sum(bounded_titer), min_p, max_p)
   output  <- lower_lims
   output[bounded_titer] <- qnorm(samples, mean[bounded_titer], sd[bounded_titer])
@@ -17,7 +16,7 @@ rcensnorm <- function(mean, sd, lower_lims, upper_lims,random_seed=random_seed) 
 
 }
 
-impute_gmt_logtiters <- function(result, titers,random_seed=2025) {
+impute_gmt_logtiters <- function(result, titers) {
 
   titerlims <- calc_titer_lims(titers, 0)
   result <- rcensnorm(
@@ -25,7 +24,6 @@ impute_gmt_logtiters <- function(result, titers,random_seed=2025) {
     sd = result["sd", "estimate"],
     lower_lims = titerlims$min_titers,
     upper_lims = titerlims$max_titers,
-    random_seed=random_seed,
   )
 
   attr(result, "censoring") <- titerlims$censoring
@@ -43,13 +41,12 @@ impute_gmt_logtiters <- function(result, titers,random_seed=2025) {
 #'
 #' @param result Results from a titer GMT estimate from `titertools::gmt()`
 #' @param titers A vector of titers for which to impute censored cases
-#' @param random_seed a random seed (integer) to ensure reproducibility — defaults to 2025.
 #'
 #' @return Returns a vector of titers with imputed values in place of censored
 #'   cases.
 #' @export
 #'
-impute_gmt_titers <- function(result, titers,random_seed=2025) {
+impute_gmt_titers <- function(result, titers) {
 
   log_titers <- impute_gmt_logtiters(result, titers)
   output <- as.character(round(2^log_titers*10, 2))
@@ -62,7 +59,6 @@ impute_log2diff <- function(
   result,
   titers1,
   titers2,
-  random_seed = 2025,
   options = list()
   ) {
 
@@ -78,7 +74,6 @@ impute_log2diff <- function(
     sd = result["sd", "estimate"],
     lower_lims = titerlims$min_diffs,
     upper_lims = titerlims$max_diffs,
-    random_seed = random_seed
   )
 
   attr(result, "censoring") <- titerlims$censoring
